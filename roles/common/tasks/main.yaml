@@ -1,0 +1,57 @@
+---
+- name: System updates
+  package:
+    name: "*"
+    state: latest
+- name: Install development tools
+  package:
+    name: "@Development Tools"
+    state: latest
+- name: Install ncurses-devel
+  package:
+    name: ncurses-devel
+    state: latest
+- name: Install qt-devel
+  package:
+    name: qt-devel
+    state: latest
+- name: Install hmaccalc
+  package:
+    name: hmaccalc
+    state: latest
+- name: Install zlib-devel
+  package:
+    name: zlib-devel
+    state: latest
+- name: Install binutils-devel
+  package:
+    name: binutils-devel
+    state: latest
+- name: Install elfutils-libelf-devel
+  package:
+    name: elfutils-libelf-devel
+    state: latest
+- name: Install scl repo
+  package:
+    name: centos-release-scl
+    state: latest
+- name: Install Python 3.4
+  package:
+    name: rh-python34
+    state: latest
+- name: Install Python 3.4 add-ons
+  package:
+    name: "rh-python34-python-*"
+    state: latest
+- name: Install Apache 2.4
+  package:
+    name: httpd24
+    state: latest
+- name: Install Apache 2.4 mod_ssl
+  package:
+    name: httpd24-mod_ssl
+    state: latest
+- name: Install Apache mod_wsgi for Python 3.4
+  package:
+    name: rh-python34-mod_wsgi
+    state: latest
