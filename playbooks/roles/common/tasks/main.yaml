@@ -12,7 +12,6 @@
     - set editing-mode vi
     - set keymap vi-command
 
-
 - name: Install needed packages
   ansible.builtin.package:
     name:

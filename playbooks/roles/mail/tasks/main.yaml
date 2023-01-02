@@ -1,0 +1,15 @@
+- name: Install Postfix packages
+  ansible.builtin.package:
+    name:
+      - postfix
+      - postfix-pgsql
+      - postfix-policyd-spf-python
+
+- name: Install Dovecot packages
+  ansible.builtin.package:
+    name:
+      - dovecot-core
+      - dovecot-pgsql
+      - dovecot-sieve
+      - dovecot-imapd
+      - dovecot-lmtpd
