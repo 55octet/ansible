@@ -9,6 +9,7 @@ packages = [{include = "ansible_playbooks"}]
 [tool.poetry.dependencies]
 python = "^3.10"
 ansible = "^7.1.0"
+ansible-lint = {version = "^6.10.2", markers = "platform_system == 'Linux'"}
 
 
 [build-system]

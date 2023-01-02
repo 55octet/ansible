@@ -1,0 +1,7 @@
+---
+- hosts: mail
+  name: Common configuration
+  remote_user: maint
+  become: true
+  roles:
+    - common
