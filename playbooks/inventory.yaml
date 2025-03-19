@@ -1,5 +1,20 @@
 ---
-mail:
-  hosts:
-    postfix:
-      ansible_host: 192.168.122.10
+all:
+  vars:
+    ansible_user: muser
+    ansible_become: true
+  children:
+    bhyve:
+      vars:
+        ansible_python_interpreter: /usr/local/bin/python3.11
+        customize_users:
+          - root
+          - artoo
+      hosts:
+        muncie.wastegate.net:
+    mail:
+      vars:
+        ansible_python_interpreter: /usr/bin/python3
+        ansible_user: almalinux
+      hosts:
+        postfix.wastegate.net:

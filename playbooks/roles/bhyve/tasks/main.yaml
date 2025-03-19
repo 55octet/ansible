@@ -1,0 +1,45 @@
+---
+- name: Install needed packages
+  ansible.builtin.package:
+    name:
+      - fusefs-ext2
+      - vm-bhyve
+      - grub2-bhyve
+      - bhyve-firmware
+      - qemu-tools
+
+- name: Create ZFS key
+  ansible.builtin.command:
+    cmd: /usr/bin/openssl rand -hex -out /etc/zfs/pool.key 32
+    creates: /etc/zfs/pool.key
+
+- name: Set permissions on key
+  ansible.builtin.file:
+    path: /etc/zfs/pool.key
+    owner: root
+    group: wheel
+    mode: "0400"
+
+- name: Create ZFS volume for VM configuration
+  community.general.zfs:
+    name: pool/vm
+    state: present
+    extra_zfs_properties:
+      compression: zstd
+      encryption: aes-256-gcm
+      keyformat: hex
+      keylocation: file:///etc/zfs/pool.key
+
+- name: Enable vm-bhyve
+  loop:
+    - name: vm_enable
+      value: "YES"
+    - name: zfs_enable
+      value: "YES"
+    - name: zfskeys_enable
+      value: "YES"
+    - name: vm_dir
+      value: zfs:pool/vm
+  community.general.sysrc:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"

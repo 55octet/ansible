@@ -1,19 +1,100 @@
 ---
-- name: Install updates
-  ansible.builtin.package:
-    name: "*"
-    state: latest
+- name: FreeBSD
+  when: ansible_distribution == 'FreeBSD'
+  block:
+    - name: Install needed packages
+      ansible.builtin.package:
+        name:
+          - tmux
+          - bash
+          - bash-completion
+          - bash-completion-freebsd
+          - cmdwatch
+          - pcre
 
-- name: Set vi mode global for the system
-  ansible.builtin.lineinfile:
-    path: /etc/inputrc
-    line: "{{ item }}"
-  loop:
-    - set editing-mode vi
-    - set keymap vi-command
+    - name: Customize user shells
+      loop: "{{ customize_users }}"
+      ansible.builtin.user:
+        name: "{{ item }}"
+        shell: /usr/local/bin/bash
 
-- name: Install needed packages
-  ansible.builtin.package:
-    name:
-      - tmux
-      - htop
+    - name: Get customize user home dir
+      loop: "{{ customize_users }}"
+      register: getent_users
+      ansible.builtin.getent:
+        database: passwd
+        key: "{{ item }}"
+
+    - name: Customize inputrc
+      loop: "{{ customize_users }}"
+      loop_control:
+        index_var: user_idx
+      ansible.builtin.copy:
+        dest: '{{ getent_users["results"][user_idx]["ansible_facts"]["getent_passwd"][item][4] }}/.inputrc'
+        owner: "{{ item }}"
+        group: '{{ getent_users["results"][user_idx]["ansible_facts"]["getent_passwd"][item][2] }}'
+        mode: "0644"
+        content: |
+          set editing-mode vi
+          set keymap vi-command
+
+- name: Enterprise Linux
+  when: ansible_os_family == "RedHat"
+  block:
+    - name: Install needed packages
+      ansible.builtin.package:
+        name:
+          - tmux
+          - bash-completion
+          - firewalld
+
+    - name: Remove packages
+      ansible.builtin.package:
+        name:
+          - qemu-guest-agent
+
+    - name: Customize inputrc
+      ansible.builtin.blockinfile:
+        path: /etc/inputrc
+        owner: root
+        group: root
+        mode: "0664"
+        insertafter: EOF
+        content: |
+          set editing-mode vi
+          set keymap vi-command
+
+    - name: Set firewall zone
+      ansible.posix.firewalld:
+        zone: public
+        interface: eth0
+        permanent: true
+        immediate: true
+        offline: true
+        state: enabled
+
+    - name: Add firewall SSH
+      ansible.posix.firewalld:
+        service: ssh
+        state: enabled
+        permanent: true
+        immediate: true
+        offline: true
+
+    - name: Remove firewall services
+      loop:
+        - cockpit
+        - dhcpv6-client
+      ansible.posix.firewalld:
+        service: "{{ item }}"
+        state: disabled
+        permanent: true
+        immediate: true
+        offline: true
+
+    - name: Enable firewalld
+      ansible.builtin.systemd_service:
+        name: firewalld
+        enabled: true
+        masked: false
+        state: started

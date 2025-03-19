@@ -3,13 +3,10 @@
     name:
       - postfix
       - postfix-pgsql
-      - postfix-policyd-spf-python
 
 - name: Install Dovecot packages
   ansible.builtin.package:
     name:
-      - dovecot-core
+      - dovecot
       - dovecot-pgsql
-      - dovecot-sieve
-      - dovecot-imapd
-      - dovecot-lmtpd
+      - dovecot-pigeonhole

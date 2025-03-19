@@ -1,14 +1,21 @@
 ---
-- hosts: mail
-  name: Common configuration
-  remote_user: maint
+- name: Common configuration
+  hosts: all
   become: true
+  tags:
+    - common
   roles:
     - common
 
-- hosts: mail
-  name: Postfix configuration
-  remote_user: maint
-  become: true
+- name: BHyVe
+  hosts: bhyve
+  tags:
+    - bhyve
+  roles:
+    - bhyve
+- name: Postfix configuration
+  hosts: mail
+  tags:
+    - mail
   roles:
     - mail
