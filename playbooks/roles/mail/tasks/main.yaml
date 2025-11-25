@@ -1,12 +1,106 @@
-- name: Install Postfix packages
+- name: Install rspamd cert
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/rpm_keys/rspamd.asc"
+    dest: /etc/pki/rpm-gpg/rspamd.asc
+    mode: "0644"
+    owner: root
+    group: root
+
+- name: Install rspamd repo
+  ansible.builtin.yum_repository:
+    name: rspamd
+    description: Rspamd stable repository
+    baseurl: http://rspamd.com/rpm-stable/centos-{{ ansible_facts["distribution_major_version"] }}/$basearch
+    enabled: true
+    gpgcheck: true
+    gpgkey: file:///etc/pki/rpm-gpg/rspamd.asc
+
+- name: Install mail packages
   ansible.builtin.package:
     name:
       - postfix
       - postfix-pgsql
-
-- name: Install Dovecot packages
-  ansible.builtin.package:
-    name:
       - dovecot
       - dovecot-pgsql
       - dovecot-pigeonhole
+      - cyrus-sasl-lib
+      - cyrus-sasl-plain
+      - rspamd
+
+- name: Add mail ports to firewall
+  loop:
+    - http
+    - smtp
+    - smtps
+    - imaps
+  ansible.posix.firewalld:
+    service: "{{ item }}"
+    state: enabled
+    permanent: true
+    immediate: true
+    offline: true
+
+- name: Create vmail group
+  ansible.builtin.group:
+    name: vmail
+    gid: 1500
+
+- name: Create vmail user
+  ansible.builtin.user:
+    name: vmail
+    comment: Virtual Mail
+    uid: 1500
+    group: vmail
+    createhome: false
+    shell: /sbin/nologin
+    password: '!'
+    local: true
+
+- name: Create vmail directories
+  loop:
+    - path: /var/vmail
+      owner: root
+      group: root
+      mode: "0755"
+    - path: /var/vmail/wastegate.net
+      owner: vmail
+      group: vmail
+      mode: "0700"
+  ansible.builtin.file:
+    state: directory
+    path: "{{ item.path }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
+
+- name: Create rspamd.conf
+  ansible.builtin.copy:
+    src: ../templates/dkim_signing.conf
+    dest: /etc/rspamd/local.d/dkim_signing.conf
+    mode: "0644"
+    owner: root
+    group: root
+  notify:
+    - Restart rspamd
+
+- name: Create postfix configuration
+  ansible.builtin.copy:
+    src: ../templates/main.cf
+    dest: /etc/postfix/main.cf
+    mode: "0644"
+    owner: root
+    group: root
+  notify:
+    - Restart postfix
+
+- name: Enable rspamd
+  ansible.builtin.systemd_service:
+    name: rspamd
+    state: started
+    enabled: true
+
+- name: Enable postfix
+  ansible.builtin.systemd_service:
+    name: postfix
+    state: started
+    enabled: true

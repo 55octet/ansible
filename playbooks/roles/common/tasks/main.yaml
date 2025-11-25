@@ -1,6 +1,6 @@
 ---
 - name: FreeBSD
-  when: ansible_distribution == 'FreeBSD'
+  when: ansible_facts["distribution"] == "FreeBSD"
   block:
     - name: Install needed packages
       ansible.builtin.package:
@@ -11,6 +11,23 @@
           - bash-completion-freebsd
           - cmdwatch
           - pcre
+          - smartmontools
+          - reptyr
+
+    - name: Enable ntpd
+      loop:
+        - name: ntpd_enable
+          value: "YES"
+        - name: ntpd_sync_on_start
+          value: "YES"
+      community.general.sysrc:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+
+    - name: Start ntpd
+      ansible.builtin.service:
+        name: ntpd
+        state: started
 
     - name: Customize user shells
       loop: "{{ customize_users }}"
@@ -39,7 +56,7 @@
           set keymap vi-command
 
 - name: Enterprise Linux
-  when: ansible_os_family == "RedHat"
+  when: ansible_facts["os_family"] == "RedHat"
   block:
     - name: Install needed packages
       ansible.builtin.package:
@@ -47,6 +64,9 @@
           - tmux
           - bash-completion
           - firewalld
+          - patch
+          - policycoreutils-python-utils
+          - setools-console
 
     - name: Remove packages
       ansible.builtin.package:

@@ -40,6 +40,10 @@
       value: "YES"
     - name: vm_dir
       value: zfs:pool/vm
+    - name: vm_list
+      value: "{{ autostart_vms | join(' ') }}"
+    - name: vm_delay
+      value: "10"
   community.general.sysrc:
     name: "{{ item.name }}"
     value: "{{ item.value }}"

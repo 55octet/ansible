@@ -13,9 +13,13 @@
     - bhyve
   roles:
     - bhyve
+
 - name: Postfix configuration
   hosts: mail
   tags:
     - mail
   roles:
+    - epel
+    - database
+    - certbot
     - mail
