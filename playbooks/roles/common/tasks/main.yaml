@@ -61,12 +61,14 @@
     - name: Install needed packages
       ansible.builtin.package:
         name:
+          - zstd
           - tmux
           - bash-completion
           - firewalld
           - patch
           - policycoreutils-python-utils
           - setools-console
+          - rsyslog-logrotate
 
     - name: Remove packages
       ansible.builtin.package:
@@ -118,3 +120,37 @@
         enabled: true
         masked: false
         state: started
+
+    - name: Setup logrotate
+      ansible.builtin.copy:
+        owner: root
+        group: root
+        mode: "0644"
+        dest: /etc/logrotate.conf
+        content: |
+          # see "man logrotate" for details
+
+          # global options do not affect preceding include directives
+
+          # rotate log files weekly
+          weekly
+
+          # keep 4 weeks worth of backlogs
+          rotate 4
+
+          # create new (empty) log files after rotating old ones
+          create
+
+          # use date as a suffix of the rotated file
+          dateext
+
+          # uncomment this if you want your log files compressed
+          compresscmd /usr/bin/zstd
+          uncompresscmd /usr/bin/unzstd
+          compressoptions -9 --long -T0
+          compressext .zst
+
+          # packages drop log rotation information into this directory
+          include /etc/logrotate.d
+
+          # system-specific logs may be also be configured here.

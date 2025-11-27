@@ -20,6 +20,7 @@
     - mail
   roles:
     - epel
+    - av
     - database
     - certbot
     - mail

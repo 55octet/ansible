@@ -83,8 +83,18 @@
   loop:
     - src: dkim_signing.conf
       dest: local.d/dkim_signing.conf
+    - src: antivirus.conf
+      dest: local.d/antivirus.conf
     - src: milter_headers.conf
       dest: override.d/milter_headers.conf
+  notify:
+    - Restart rspamd
+
+- name: Add rspamd to virusgroup
+  ansible.builtin.user:
+    name: _rspamd
+    append: true
+    groups: virusgroup
   notify:
     - Restart rspamd
 
