@@ -75,11 +75,16 @@
 
 - name: Create rspamd.conf
   ansible.builtin.copy:
-    src: ../templates/dkim_signing.conf
-    dest: /etc/rspamd/local.d/dkim_signing.conf
+    src: ../templates/{{ item.src }}
+    dest: /etc/rspamd/{{ item.dest }}
     mode: "0644"
     owner: root
     group: root
+  loop:
+    - src: dkim_signing.conf
+      dest: local.d/dkim_signing.conf
+    - src: milter_headers.conf
+      dest: override.d/milter_headers.conf
   notify:
     - Restart rspamd
 
@@ -93,6 +98,45 @@
   notify:
     - Restart postfix
 
+- name: Create sieve dir
+  ansible.builtin.file:
+    path: /etc/dovecot/after-sieve
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: Create junk sieve
+  register: sieve_file
+  notify:
+    - Compile dovecot sieve
+    - Restart dovecot
+  ansible.builtin.copy:
+    dest: /etc/dovecot/after-sieve/junk.sieve
+    mode: "0644"
+    owner: root
+    group: root
+    content: |
+      require ["fileinto"];
+
+      if header :contains "X-Spam" "Yes" {
+        fileinto "Junk";
+        stop;
+      }
+
+- name: Create dovecot.conf
+  ansible.builtin.copy:
+    src: ../templates/{{ item.src }}
+    dest: /etc/dovecot/{{ item.dest }}
+    mode: "0644"
+    owner: root
+    group: root
+  loop:
+    - src: 90-sieve.conf
+      dest: conf.d/90-sieve.conf
+  notify:
+    - Restart dovecot
+
 - name: Enable rspamd
   ansible.builtin.systemd_service:
     name: rspamd
@@ -102,5 +146,11 @@
 - name: Enable postfix
   ansible.builtin.systemd_service:
     name: postfix
+    state: started
+    enabled: true
+
+- name: Enable dovecot
+  ansible.builtin.systemd_service:
+    name: dovecot
     state: started
     enabled: true
