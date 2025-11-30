@@ -110,11 +110,15 @@
 
 - name: Create sieve dir
   ansible.builtin.file:
-    path: /etc/dovecot/after-sieve
+    path: "{{ item }}"
     state: directory
+    recurse: true
     mode: "0755"
     owner: root
     group: root
+  loop:
+    - /var/lib/dovecot/sieve.d
+    - /var/lib/dovecot/sieve.after.d
 
 - name: Create junk sieve
   register: sieve_file
@@ -122,7 +126,7 @@
     - Compile dovecot sieve
     - Restart dovecot
   ansible.builtin.copy:
-    dest: /etc/dovecot/after-sieve/junk.sieve
+    dest: /var/lib/dovecot/sieve.after.d/junk.sieve
     mode: "0644"
     owner: root
     group: root
@@ -136,14 +140,14 @@
 
 - name: Create dovecot.conf
   ansible.builtin.copy:
-    src: ../templates/{{ item.src }}
+    src: ../templates/dovecot/{{ item.src }}
     dest: /etc/dovecot/{{ item.dest }}
     mode: "0644"
     owner: root
     group: root
   loop:
-    - src: 90-sieve.conf
-      dest: conf.d/90-sieve.conf
+    - src: local.conf
+      dest: local.conf
   notify:
     - Restart dovecot
 

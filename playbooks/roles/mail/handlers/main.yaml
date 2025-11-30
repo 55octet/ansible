@@ -9,12 +9,12 @@
     name: rspamd
     state: restarted
 
-- name: Restart dovecot
-  ansible.builtin.systemd_service:
-    name: dovecot
-    state: restarted
-
 - name: Compile dovecot sieve
   ansible.builtin.command:
     cmd: /usr/bin/sievec {{ sieve_file.dest }}
   when: sieve_file.changed
+
+- name: Restart dovecot
+  ansible.builtin.systemd_service:
+    name: dovecot
+    state: restarted
