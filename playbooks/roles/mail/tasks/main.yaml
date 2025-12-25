@@ -73,6 +73,18 @@
     group: "{{ item.group }}"
     mode: "{{ item.mode }}"
 
+- name: Create diffie helman parameters
+  ansible.builtin.command:
+    cmd: /usr/bin/openssl dhparam -out /etc/dovecot/dh.pem 4096
+    creates: /etc/dovecot/dh.pem
+
+- name: Set perms on diffie helman parameters
+  ansible.builtin.file:
+    path: /etc/dovecot/dh.pem
+    owner: root
+    group: root
+    mode: "0400"
+
 - name: Create rspamd.conf
   ansible.builtin.copy:
     src: ../templates/{{ item.src }}
@@ -119,6 +131,7 @@
   loop:
     - /var/lib/dovecot/sieve.d
     - /var/lib/dovecot/sieve.after.d
+    - /var/lib/dovecot/sieve.global.d
 
 - name: Create junk sieve
   register: sieve_file
@@ -126,7 +139,7 @@
     - Compile dovecot sieve
     - Restart dovecot
   ansible.builtin.copy:
-    dest: /var/lib/dovecot/sieve.after.d/junk.sieve
+    dest: /var/lib/dovecot/sieve.d/junk.sieve
     mode: "0644"
     owner: root
     group: root
