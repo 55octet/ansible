@@ -145,6 +145,7 @@
           dateext
 
           # uncomment this if you want your log files compressed
+          compress
           compresscmd /usr/bin/zstd
           uncompresscmd /usr/bin/unzstd
           compressoptions -9 --long -T0
